@@ -3,12 +3,25 @@ import networkx as nx
 
 
 class Section(set):
+    links = []
+
     def __init__(self):
         return 
     
-    def links(self):
+    def link(self, v1, v2):
+        v1_found = False
+        v2_found = False
         for i in self:
-            print(i)
+            if v1 == i.germ and v2 in i.connectors:
+                v1_found = True
+            if v2 == i.germ and v1 in i.connectors:
+                v2_found = True
+
+        if v1_found and v2_found:
+            self.links.append((v1,v2))
+            return True
+        else:
+            return False
 
     def __str__(self):
         return str([x for x in self])
@@ -39,6 +52,12 @@ def enumerate_seeds(G):
     print(section)
     for i in section:
         print(i)
+
+
+    print(section.link(1,2))
+    print(section.link(2,3))
+    print(section.links)
+
     return section 
 
 if __name__ == "__main__":
