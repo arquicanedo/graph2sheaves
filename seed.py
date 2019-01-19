@@ -4,6 +4,7 @@ import networkx as nx
 # A SECTION is a set of seeds
 class Section(list):
     links = []
+    connectors = []
 
     def __init__(self):
         return 
@@ -78,18 +79,12 @@ class Seed:
         return 'seed: %s %s %s' % (self.germ, G.edges(), self.connectors)
 
 
-def enumerate_seeds(G):
+def disjoint_section_from_graph(G):
     section = Section()
     for germ in G.nodes():
         H = nx.Graph()
         [H.add_edges_from([x]) for x in G.edges(germ)]
         section.append(Seed(H, germ))
-
-    print(section)
-    for i in section:
-        print(i)
-
-
     return section 
 
 if __name__ == "__main__":
@@ -99,7 +94,7 @@ if __name__ == "__main__":
     G.add_edge(1,4)
     G.add_edge(2,4)
 
-    section = enumerate_seeds(G)
+    section = disjoint_section_from_graph(G)
     print(section.join(1,2))    # True
     print(section.join(2,3))    # False
     print(section.join(1,1))    # False since self loop not specified
