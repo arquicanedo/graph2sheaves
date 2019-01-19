@@ -1,9 +1,9 @@
 import networkx as nx
 
 
-
+# A SECTION is a set of seeds
 class Section(list):
-    connected_seeds = []
+    links = []
 
     def __init__(self):
         return 
@@ -13,7 +13,7 @@ class Section(list):
     # when there is a link between them.
     # A link can be formed only when germ v1 has v2 as connector, and also
     # at the same time, the germ v2 has v1 as connector.
-    def link(self, v1, v2):
+    def join(self, v1, v2):
         v1_found = False
         v2_found = False
         v1_seed = None
@@ -26,8 +26,8 @@ class Section(list):
                 v2_found = True
                 v2_seed = i
         if v1_found and v2_found:
-            if (v1_seed, v2_seed) not in self.connected_seeds:
-                self.connected_seeds.append((v1_seed, v2_seed))
+            if (v1_seed, v2_seed) not in self.links:
+                self.links.append((v1_seed, v2_seed))
             return True
         else:
             return False
@@ -36,6 +36,35 @@ class Section(list):
         return str([x for x in self])
 
 
+    def find_seed(self, v1):
+        for i in self:
+            if v1 == i.germ:
+                return i
+        return None
+
+    def seeds_connected(self, v1, v2):
+        v1_seed = self.find_seed(v1)
+        v2_seed = self.find_seed(v2)
+        if (v1_seed, v2_seed) in self.links:
+            return True
+        else:
+            return False
+
+    # Definition. A CONNECTED SECTION, or a CONTIGUOUS SECTION is a section 
+    # where every germ is connected to every other germ via a path through the edges.
+    def connected(self):
+        # Build a graph with nodes as elements in the SECTION and edges as links in the SECTION
+        # and check for connectedness
+        G = nx.Graph()
+        [G.add_node(x) for x in self]
+        [G.add_edges_from([x]) for x in self.links]
+        return nx.is_connected(G)
+
+
+# A SEED is a vertex and the set of edges that connect to it. That is, it is the pair (v,Ev) 
+# where v is a single vertex, and Ev is a set of edges containing that vertex, i.e. that set 
+# of edges having v as one or the other endpoint. The vertex v may be called the GERM of the 
+# seed. For each edge in the edge set, the other vertex is called the CONNECTOR
 class Seed:
     seed = None
     germ = None
@@ -61,7 +90,6 @@ def enumerate_seeds(G):
         print(i)
 
 
-
     return section 
 
 if __name__ == "__main__":
@@ -72,7 +100,16 @@ if __name__ == "__main__":
     G.add_edge(2,4)
 
     section = enumerate_seeds(G)
-    print(section.link(1,2))    # True
-    print(section.link(2,3))    # False
-    print(section.link(1,1))    # False since self loop not specified
-    print(section.connected_seeds)
+    print(section.join(1,2))    # True
+    print(section.join(2,3))    # False
+    print(section.join(1,1))    # False since self loop not specified
+    print(section.links)
+    print(section.seeds_connected(1,2))
+    print(section.seeds_connected(1,3))
+    print('section connected', section.connected())
+
+    section.join(1,3)
+    section.join(1,4)
+    section.join(2,4)
+    print('section connected', section.connected())
+
