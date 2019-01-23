@@ -60,6 +60,13 @@ class SECTION:
     def copy(self):
         return SECTION(self.seeds, self.links)
 
+
+    # Join the list of pairs of seeds
+    def join_from(self, pairs_of_seeds):
+        for pair in pairs_of_seeds:
+            self.join(pair[0], pair[1])
+            print('Joining %s with %s' % (pair[0], pair[1]))
+
     # Definition. Given a section S, a LINK between seeds s1 = (v1,C1) and s2 = (v2,C2) 
     # is any edge (v1,v2) where v1 is in one of the types in C2 and v2 is in one of the types in C1.
     # That is, there exists a pair (v1,ta) \in C1 such that v2 \in ta and, symmetrically,
@@ -111,7 +118,6 @@ class SECTION:
         print(G.edges())
         return nx.is_connected(G)
 
-
     def connectors(self):
         result = []
         for seed in self.seeds:
@@ -145,18 +151,19 @@ def join_sections(s1, s2, c1,  c2):
 
 
         
+# Given a map \pi:E->B, where both E and B are collections of seeds,
+# the STALK above b \in B is the set S of seeds in E such that for each s = (v,C_v) \in S,
+# one has \pi(s) = b. The map \pi can be decomposed into a pair \pi = (\pi_g, \pi_c) such that,
+# for every \gamma \in C_v one has that \pi(v,\gamma) = (\pi_g(v), \pi_c(\gamma)) such that
+# \pi_c(\gamma) \in Cb. That is, \pi_g maps the germs of E to the germs of B and \pi_c maps the 
+# connectors in E to specific connectors in B.
+class STALK:
+    def __init__(self, E, B):
+        self.E = E
+        self.B = B
 
 
-
-def disjoint_section_from_graph(G):
-    section = Section()
-    for germ in G.nodes():
-        H = nx.Graph()
-        [H.add_edges_from([x]) for x in G.edges(germ)]
-        section.append(Seed(H, germ))
-    return section 
-
-if __name__ == "__main__":
+def test_section_composition():
     A = ATOM(('A','a'))
     B = ATOM(('B','b'))
     C = ATOM(('C','c'))
@@ -187,3 +194,29 @@ if __name__ == "__main__":
 
     foo = join_sections(mysection, mysection2, Cseed, Xseed)
     print(foo.is_connected())
+
+
+def test_stalks():
+    A = ATOM(('A','a'))
+    B = ATOM(('B','b'))
+    C = ATOM(('C','c'))
+    D = ATOM(('D','d'))
+    Aseed = SEED(A, ['b', 'c'])
+    Bseed = SEED(B, ['a', 'd'])
+    Cseed = SEED(C, ['a', 'd'])
+    Dseed = SEED(D, ['b', 'c'])
+    mysection = SECTION([Aseed, Bseed, Cseed, Dseed])
+    mysection.join_from([(Aseed, Bseed), (Aseed, Cseed), (Bseed, Dseed), (Cseed, Dseed)])
+
+    X = ATOM(('X', 'any'))
+    Xseed = SEED(X, ['a', 'd'])
+    E = set([Bseed, Cseed])
+    B = set([Xseed])
+
+    mystalk = STALK(E, B)
+    print(mystalk.E, mystalk.B)
+
+
+if __name__ == "__main__":
+    #test_section_composition()
+    test_stalks()
