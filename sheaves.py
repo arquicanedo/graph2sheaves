@@ -33,12 +33,18 @@ class SEED:
         return
 
 
-# A SECTION is a set of seeds
+    def copy(self):
+        return SEED(self.germ, self.connectors)
+
+
+# Typed seed
 class SECTION:
-    def __init__(self, seeds):
+    def __init__(self, seeds, links=None):
         self.seeds = []
         self.links = []
         [self.add_seed(x) for x in seeds]
+        if links:
+            [self.add_link(x) for x in links]
 
     def add_seed(self, seed):
         self.seeds.append(seed)
@@ -51,62 +57,9 @@ class SECTION:
     def __str__(self):
         return 'section: %s' % (self.seeds)
 
-    # Definition. Given a section S, a "link" is any edge (v1,v2) where both 
-    # v1 and v2 appear as germs of seeds in S. Two seeds are "connected"
-    # when there is a link between them.
-    # Assumptions:
-    # - v1 and v2 are Atoms
-    # - links are between Atoms
-    def join(self, v1, v2):
-        v1_seed = None
-        v2_seed = None
-        for i in self.seeds:
-            if v1 == i.germ and v2 in i.connectors:
-                v1_seed = i
-            if v2 == i.germ and v1 in i.connectors:
-                v2_seed = i
-        # A link can be formed only when germ v1 has v2 as connector, and also
-        # at the same time, the germ v2 has v1 as connector.
-        if v1_seed and v2_seed:
-            if (v1_seed, v2_seed) not in self.links:
-                self.add_link((v1_seed.germ, v2_seed.germ))
-            # The joining is also meant to consume the connectors as a resource: 
-            # once two connectors have been connected, neither one is free to make 
-            # connections elsewhere.
-            v1_seed.connectors.remove(v2)
-            v2_seed.connectors.remove(v1)
-            return True
-        else:
-            return False
+    def copy(self):
+        return SECTION(self.seeds, self.links)
 
-    def connectors(self):
-        result = []
-        for seed in self.seeds:
-            available_connectors = []
-            for j in seed.connectors:
-                available_connectors.append(j)
-            result.append((seed.germ, available_connectors))
-        print('Available connectors: ', result)
-        print('Links:', self.links)
-
-    # Definition. A CONNECTED SECTION, or a CONTIGUOUS SECTION is a section 
-    # where every germ is connected to every other germ via a path through the edges.
-    def is_connected(self):
-        # Build a graph with nodes as elements in the SECTION and edges as links in the SECTION
-        # and check for connectedness
-        G = nx.Graph()
-        print('Section # of seeds %s' % (len(self.seeds)))
-        [G.add_node(x.germ) for x in self.seeds]
-        [G.add_edges_from([x]) for x in self.links]
-        print('Section has %s nodes and %s edges' % (len(G.nodes()), len(G.edges())))
-        print(G.nodes())
-        print(G.edges())
-        return nx.is_connected(G)
-
-
-
-# Typed seed
-class tSECTION(SECTION):
     # Definition. Given a section S, a LINK between seeds s1 = (v1,C1) and s2 = (v2,C2) 
     # is any edge (v1,v2) where v1 is in one of the types in C2 and v2 is in one of the types in C1.
     # That is, there exists a pair (v1,ta) \in C1 such that v2 \in ta and, symmetrically,
@@ -159,6 +112,42 @@ class tSECTION(SECTION):
         return nx.is_connected(G)
 
 
+    def connectors(self):
+        result = []
+        for seed in self.seeds:
+            available_connectors = []
+            for j in seed.connectors:
+                available_connectors.append(j)
+            result.append((seed.germ, available_connectors))
+        print('Available connectors: ', result)
+        print('Links:', self.links)
+
+
+# (semi) Definition:  two connected sections can be linked together to form a larger connected section
+def join_sections(s1, s2, c1,  c2):
+    new_section = None
+    if s1.is_connected() and s2.is_connected():
+        all_seeds = []
+        [all_seeds.append(x) for x in s1.seeds]
+        [all_seeds.append(x) for x in s2.seeds]
+
+        all_links = []
+        [all_links.append(x) for x in s1.links]
+        [all_links.append(x) for x in s2.links]
+
+        new_section = SECTION(all_seeds, all_links)
+        new_section.join(c1, c2)
+        
+        if new_section.is_connected():
+            return new_section
+
+    return None
+
+
+        
+
+
+
 def disjoint_section_from_graph(G):
     section = Section()
     for germ in G.nodes():
@@ -168,36 +157,33 @@ def disjoint_section_from_graph(G):
     return section 
 
 if __name__ == "__main__":
-
-
-    A = ATOM(('A', 'any'))
-    B = ATOM(('B', 'any'))
-    C = ATOM(('C', 'any'))
-    D = ATOM(('D', 'any'))
-    Aseed = SEED(A, [B,C]) 
-    Bseed = SEED(B, [A,D])
-    Cseed = SEED(C, [A,D])
-    Dseed = SEED(D, [C,B])
-    mysection = SECTION([Aseed, Bseed, Cseed, Dseed])
-    mysection.join(A, B)
-    mysection.join(A, C)
-    mysection.join(C, D)
-    mysection.join(B, D)
-    print('connected section: ', mysection.is_connected())
-    print(mysection.connectors())
-
-
+    A = ATOM(('A','a'))
+    B = ATOM(('B','b'))
+    C = ATOM(('C','c'))
+    Aseed = SEED(A, ['b'])
+    Bseed = SEED(B, ['a', 'c'])
+    Cseed = SEED(C, ['b', 'x'])
+    mysection = SECTION([Aseed, Bseed, Cseed])
+    mysection.join(Aseed, Bseed)
+    mysection.join(Bseed, Cseed)
+ 
     print('------------------')
     X = ATOM(('X','x'))
     Y = ATOM(('Y','y'))
     Z = ATOM(('Z','z'))
-    Xseed = SEED(X, ['x'])
+    Xseed = SEED(X, ['y', 'c'])
     Yseed = SEED(Y, ['x', 'z'])
     Zseed = SEED(Z, ['y'])
-    mysection2 = tSECTION([Xseed, Yseed, Zseed])
+    mysection2 = SECTION([Xseed, Yseed, Zseed])
     mysection2.join(Xseed,Yseed)
     mysection2.join(Zseed,Yseed)
 
+    #print(mysection2.is_connected())
+    mysection.connectors()
     mysection2.connectors()
+
+    print(mysection.is_connected())
     print(mysection2.is_connected())
 
+    foo = join_sections(mysection, mysection2, Cseed, Xseed)
+    print(foo.is_connected())
