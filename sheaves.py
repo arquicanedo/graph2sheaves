@@ -158,9 +158,27 @@ def join_sections(s1, s2, c1,  c2):
 # \pi_c(\gamma) \in Cb. That is, \pi_g maps the germs of E to the germs of B and \pi_c maps the 
 # connectors in E to specific connectors in B.
 class STALK:
-    def __init__(self, E, B):
+    #def __init__(self, E, B):
+    #    self.E = E
+    #    self.B = B
+
+    # The most natural way seems to be to provide E and generate B
+    def __init__(self, E):
+        assert isinstance(E, list)
+        
+        # Map connectors in E to connectors in B without duplicates
+        E_connectors = []
+        for seed in E:
+            for connector in seed.connectors:
+                if connector not in E_connectors:
+                    E_connectors.append(connector)
+
+        X = ATOM(('X','x'))
+        Bseed = SEED(X, E_connectors)
+
         self.E = E
-        self.B = B
+        self.B = Bseed
+
 
 
 def test_section_composition():
@@ -205,16 +223,13 @@ def test_stalks():
     Bseed = SEED(B, ['a', 'd'])
     Cseed = SEED(C, ['a', 'd'])
     Dseed = SEED(D, ['b', 'c'])
-    mysection = SECTION([Aseed, Bseed, Cseed, Dseed])
-    mysection.join_from([(Aseed, Bseed), (Aseed, Cseed), (Bseed, Dseed), (Cseed, Dseed)])
+    #mysection = SECTION([Aseed, Bseed, Cseed, Dseed])
+    #mysection.join_from([(Aseed, Bseed), (Aseed, Cseed), (Bseed, Dseed), (Cseed, Dseed)])
 
-    X = ATOM(('X', 'any'))
-    Xseed = SEED(X, ['a', 'd'])
-    E = set([Bseed, Cseed])
-    B = set([Xseed])
+    E = [Bseed, Cseed]
 
-    mystalk = STALK(E, B)
-    print(mystalk.E, mystalk.B)
+    mystalk = STALK(E)
+    print(mystalk.E, mystalk.B.connectors)
 
 
 if __name__ == "__main__":
