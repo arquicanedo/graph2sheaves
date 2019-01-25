@@ -162,22 +162,38 @@ class STALK:
     #    self.E = E
     #    self.B = B
 
-    # The most natural way seems to be to provide E and generate B
+    # The most natural way seems to be to provide E and generate the base projection as a SEED
     def __init__(self, E):
         assert isinstance(E, list)
-        
+        self.map = MAP()        
+        # Germ in the base projection where all the germs of E will be mapped to
+        X = ATOM(('X','x'))
         # Map connectors in E to connectors in B without duplicates
         E_connectors = []
         for seed in E:
+            # Deal with connectors
             for connector in seed.connectors:
                 if connector not in E_connectors:
                     E_connectors.append(connector)
-
-        X = ATOM(('X','x'))
+            # Map germs of E to germs of B
+            self.map.add_germ_mapping(seed.germ, X)
         Bseed = SEED(X, E_connectors)
 
         self.E = E
-        self.B = Bseed
+        self.base = Bseed
+
+
+class MAP:
+    def __init__(self):
+        self.germ = []
+        self.connectors = []
+
+    def add_germ_mapping(self, src, dst):
+        self.germ.append((src, dst))
+
+    def add_connector_mapping(self, src, dst):
+        self.connectors.append((src, dst))
+
 
 
 
@@ -229,7 +245,8 @@ def test_stalks():
     E = [Bseed, Cseed]
 
     mystalk = STALK(E)
-    print(mystalk.E, mystalk.B.connectors)
+    print(mystalk.E, mystalk.base.connectors)
+    print(mystalk.map, mystalk.map.germ)
 
 
 if __name__ == "__main__":
