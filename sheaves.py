@@ -157,43 +157,41 @@ def join_sections(s1, s2, c1,  c2):
 # for every \gamma \in C_v one has that \pi(v,\gamma) = (\pi_g(v), \pi_c(\gamma)) such that
 # \pi_c(\gamma) \in Cb. That is, \pi_g maps the germs of E to the germs of B and \pi_c maps the 
 # connectors in E to specific connectors in B.
+# Note: a Stalk is a stack of seeds
+# Note: a Stalk consists of collection of seeds, a map, and the projection (a seed)
 class STALK:
-    #def __init__(self, E, B):
-    #    self.E = E
-    #    self.B = B
-
-    # The most natural way seems to be to provide E and generate the base projection as a SEED
-    def __init__(self, E):
-        assert isinstance(E, list)
-        self.map = MAP()        
-        # Germ in the base projection where all the germs of E will be mapped to
-        X = ATOM(('X','x'))
-        # Map connectors in E to connectors in B without duplicates
-        E_connectors = []
-        for seed in E:
-            # Deal with connectors
-            for connector in seed.connectors:
-                if connector not in E_connectors:
-                    E_connectors.append(connector)
-            # Map germs of E to germs of B
-            self.map.add_germ_mapping(seed.germ, X)
-        Bseed = SEED(X, E_connectors)
-
-        self.E = E
-        self.base = Bseed
+    def __init__(self, pi):
+        self.E = pi.E
+        self.map = pi
+        self.B = pi.B
 
 
-class MAP:
-    def __init__(self):
-        self.germ = []
-        self.connectors = []
 
-    def add_germ_mapping(self, src, dst):
-        self.germ.append((src, dst))
 
-    def add_connector_mapping(self, src, dst):
-        self.connectors.append((src, dst))
+# The stalk field only has individuals seeds up and down each stalk; the stalks are
+# not linked to one-another. In the general case, the stalks are
+# linked to one-another; 
+class STALK_FIELD:
+    def __init__(self, stalk_collection):
+        self.stalks = stalk_collection 
+        self.projection = []
+        for stalk in stalk_collection:
+            self.projection.append(stalk.B)
+        self.section = SECTION(self.projection)
 
+
+# The target of \pi is a graph quotient \pi : E -> B
+class MAP():
+    def __init__(self, E_seeds):
+        # The assumption is that all map to a single node
+        B_connectors = []
+        for e in E_seeds:
+            for connector in e.connectors:
+                if connector not in B_connectors:
+                    B_connectors.append(connector)
+        X = ATOM(('X', 'x'))
+        self.E = E_seeds
+        self.B = SEED(X, B_connectors)
 
 
 
@@ -239,16 +237,41 @@ def test_stalks():
     Bseed = SEED(B, ['a', 'd'])
     Cseed = SEED(C, ['a', 'd'])
     Dseed = SEED(D, ['b', 'c'])
-    #mysection = SECTION([Aseed, Bseed, Cseed, Dseed])
-    #mysection.join_from([(Aseed, Bseed), (Aseed, Cseed), (Bseed, Dseed), (Cseed, Dseed)])
 
-    E = [Bseed, Cseed]
+    mystalk = STALK(MAP([Bseed, Cseed]))
+    print(mystalk.map)
+    print(mystalk.E)
+    print(mystalk.B)
 
-    mystalk = STALK(E)
-    print(mystalk.E, mystalk.base.connectors)
-    print(mystalk.map, mystalk.map.germ)
+
+def test_stalk_field():
+    A = ATOM(('A','a'))
+    B = ATOM(('B','b'))
+    C = ATOM(('C','c'))
+    D = ATOM(('D','d'))
+    E = ATOM(('E','e'))
+    Aseed = SEED(A, ['a1', 'a2', 'a3'])
+    Bseed = SEED(B, ['b1', 'b2', 'b3'])
+    Cseed = SEED(C, ['c1', 'c2', 'c3'])
+    Dseed = SEED(D, ['d1', 'd2'])
+    Eseed = SEED(E, ['e1', 'e2'])
+
+    stalk1 = STALK(MAP([Aseed, Bseed]))
+    stalk2 = STALK(MAP([Cseed]))
+    stalk3 = STALK(MAP([Dseed, Eseed]))
+
+    print(stalk1.B)
+    print(stalk2.B)
+    print(stalk3.B)
+
+    stalk_field = STALK_FIELD([stalk1, stalk2, stalk3])
+    print(stalk_field.projection)
+    print(stalk_field.section)
+
+
 
 
 if __name__ == "__main__":
     #test_section_composition()
-    test_stalks()
+    #test_stalks()
+    test_stalk_field()
