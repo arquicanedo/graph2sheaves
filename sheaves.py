@@ -1,5 +1,27 @@
 import networkx as nx
+from itertools import combinations
 
+# Utility functions
+def seeds_from_graph(G):
+    seed_collection = []
+    for v in G.nodes():
+        atom = ATOM((v, v))
+        seed = SEED(atom, [x for x in G.neighbors(v)])
+        seed_collection.append(seed) 
+    return seed_collection
+
+
+# Definition. An OPEN SUBGRAPH U of a graph G is defined to be a section of G.
+def open_subgraph(G, nodes_in_section=None):
+    seed_collection = []
+    germs = nodes_in_section
+    for v in germs:
+        atom = ATOM((v,v))
+        seed = SEED(atom, [x for x in G.neighbors(v)])
+        seed_collection.append(seed)
+    section = SECTION(seed_collection)
+    section.connect()
+    return section
 
 
 # ATOM is the basic element
@@ -59,6 +81,11 @@ class SECTION:
 
     def copy(self):
         return SECTION(self.seeds, self.links)
+
+    def connect(self):
+        print('Connecting section')
+        for c in combinations(self.seeds, 2):
+            self.join(c[0], c[1])
 
 
     # Join the list of pairs of seeds
@@ -180,6 +207,8 @@ class STALK_FIELD:
         self.section = SECTION(self.projection)
 
 
+
+
 # The target of \pi is a graph quotient \pi : E -> B
 class MAP():
     def __init__(self, E_seeds):
@@ -270,8 +299,18 @@ def test_stalk_field():
 
 
 
+def test_open_subgraphs():
+    G = nx.Graph()
+    G.add_edges_from([('A','B'), ('A','C'), ('B','D'), ('B','E'), ('D','E')])
+    seeds = seeds_from_graph(G)
+    #print(*seeds)
+
+    section = open_subgraph(G, ['A','B'])
+    for s in section.seeds:
+        print(s)
 
 if __name__ == "__main__":
     #test_section_composition()
     #test_stalks()
-    test_stalk_field()
+    #test_stalk_field()
+    test_open_subgraphs()
