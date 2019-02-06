@@ -2,6 +2,9 @@ import networkx as nx
 from itertools import combinations
 
 # Utility functions
+
+
+# Given a graph generate all possible seeds
 def seeds_from_graph(G):
     seed_collection = []
     for v in G.nodes():
@@ -308,6 +311,7 @@ def test_open_subgraphs():
     section = open_subgraph(G, ['A','B'])
     for s in section.seeds:
         print(s)
+    print(section.is_connected())
 
 if __name__ == "__main__":
     #test_section_composition()
