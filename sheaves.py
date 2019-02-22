@@ -15,6 +15,12 @@ def seeds_from_graph(G):
 
 
 # Definition. An OPEN SUBGRAPH U of a graph G is defined to be a section of G.
+# Open subgraphs will always be subgraphs of the base space B
+#
+# This function makes sure that the claim holds true:
+# Claim. There exists a functor F such that, for each open subgraph U of the base graph
+# B, there exists some collection F(U) of sections above U
+# This function is the functor F: graph(B) -> section(U)
 def open_subgraph(G, nodes_in_section=None):
     seed_collection = []
     germs = nodes_in_section
@@ -198,7 +204,7 @@ class STALK:
 
 
 
-# The stalk field only has individuals seeds up and down each stalk; the stalks are
+# The stalk field only has individual seeds up and down each stalk; the stalks are
 # not linked to one-another. In the general case, the stalks are
 # linked to one-another; 
 class STALK_FIELD:
