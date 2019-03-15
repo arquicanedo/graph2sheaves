@@ -57,20 +57,27 @@ def section_quotient(section, seeds, target):
 
 
 class Stalk():
-    def __init__(self):
+    def __init__(self, p_germ):
         self.seeds = []
+        self.projected_germ = p_germ
 
     def add_seed(self, seed_germ, seed_connectors):
         self.seeds.append((seed_germ, seed_connectors))
 
-    def projection(self, seed_germ):
+    def projection(self):
         # set eliminates the need to check for duplicates
         connectors = set()
         for s in self.seeds:
             for c in s[1]:
                 connectors.add(c)
-        return seed_germ, list(connectors)
 
+        return self.projected_germ, list(connectors)
+    
+    def is_empty(self):
+        if not self.seeds:
+            return True
+        else:
+            return False
 
 class StalkField():
     def __init__(self):
@@ -79,10 +86,10 @@ class StalkField():
     def add_stalk(self, stalk):
         self.stalks.append(stalk)
 
-    def projection(self, projection_name):
+    def projection(self):
         stalk_projections = []
         for count, stalk in enumerate(self.stalks):
-            stalk_projections.append(stalk.projection(projection_name+str(count)))
+            stalk_projections.append(stalk.projection())
         return stalk_projections
 
 
@@ -136,7 +143,7 @@ class Section(nx.Graph):
             germ = seed
             connectors = [x for x in self.neighbors(seed)]
             return germ, connectors
-        return None
+        return None, None
 
 class Sheaf():
     def __init__(self):
@@ -156,6 +163,17 @@ class Sheaf():
     def add_sections_from(self, sections):
         for s in sections:
             self.add_section(s)
+
+    def pierce(self, key):
+        stalk = Stalk(key)
+        for s in self.sections:
+            germ, connectors = s.get_seed(key)
+            if germ:
+                stalk.add_seed(germ, connectors)
+        if not stalk.is_empty():
+            self.add_stalk(stalk)
+        print(stalk.projection())
+
 
 
 def test_join_sections():
@@ -187,40 +205,43 @@ def test_graph_quotient():
     quotient.connectors()
 
 def test_stalk():
-    stalk = Stalk()
+    stalk = Stalk('x')
     stalk.add_seed('a', ['b','c'])
     stalk.add_seed('d', ['e','f','g','h'])
     print(stalk.seeds)
-    print(stalk.projection('x'))
+    print(stalk.projection())
 
 def test_stalkfield():
-    stalk1 = Stalk()
+    stalk1 = Stalk('foo')
     stalk1.add_seed('a', ['b','c'])
     stalk1.add_seed('d', ['e','f'])
-    stalk2 = Stalk()
+    stalk2 = Stalk('bar')
     stalk2.add_seed('x', ['y','z'])
     stalk2.add_seed('w', ['u','v'])
-    stalk3 = Stalk()
+    stalk3 = Stalk('zar')
     stalk3.add_seed('m', ['n', 'o'])
     stalkfield = StalkField()
     stalkfield.add_stalk(stalk1)
     stalkfield.add_stalk(stalk2)
     stalkfield.add_stalk(stalk3)
-    print(stalkfield.projection('foo'))
+    print(stalkfield.projection())
 
 
 def test_sheaf():
     sheaf = Sheaf()
     section1 = section_from_text('fly like a butterfly')
-    section2 = section_from_text('airplanes that fly with birds')
-    sheaf.add_sections_from([section1, section2])
-    print(section1.get_seed('fly'))
-    print(section2.get_seed('fly'))
-    stalk = Stalk()
-    stalk.add_seed(*section1.get_seed('fly'))
-    stalk.add_seed(*section2.get_seed('fly'))
-    sheaf.add_stalk(stalk)
-    print(stalk.projection('foo'))
+    section2 = section_from_text('airplanes that fly')
+    section3 = section_from_text('fly fishing')
+    section4 = section_from_text('fly away home')
+    section5 = section_from_text('fly ash in concrete')
+    section6 = section_from_text('when sparks fly')
+    section7 = section_from_text('lets fly a kite')
+    section8 = section_from_text('learn to fly helicopters')
+    sheaf.add_sections_from([section1, section2, section3, section4, section5, section6, section7, section8])
+    sheaf.pierce('fly')
+    sheaf.pierce('a')
+    print(len(sheaf.sections))
+    print(len(sheaf.stalks))
 
 if __name__ == "__main__":
     #test_join_sections()
