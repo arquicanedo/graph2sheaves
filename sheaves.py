@@ -3,7 +3,6 @@ from itertools import combinations
 
 # Utility functions
 
-
 # Given a graph generate all possible seeds
 def seeds_from_graph(G):
     seed_collection = []
@@ -164,7 +163,6 @@ class SECTION:
         print('Available connectors: ', result)
         print('Links:', self.links)
 
-
 # (semi) Definition:  two connected sections can be linked together to form a larger connected section
 def join_sections(s1, s2, c1,  c2):
     new_section = None
@@ -184,8 +182,6 @@ def join_sections(s1, s2, c1,  c2):
             return new_section
 
     return None
-
-
         
 # Given a map \pi:E->B, where both E and B are collections of seeds,
 # the STALK above b \in B is the set S of seeds in E such that for each s = (v,C_v) \in S,
@@ -201,9 +197,6 @@ class STALK:
         self.map = pi
         self.B = pi.B
 
-
-
-
 # The stalk field only has individual seeds up and down each stalk; the stalks are
 # not linked to one-another. In the general case, the stalks are
 # linked to one-another; 
@@ -214,9 +207,6 @@ class STALK_FIELD:
         for stalk in stalk_collection:
             self.projection.append(stalk.B)
         self.section = SECTION(self.projection)
-
-
-
 
 # The target of \pi is a graph quotient \pi : E -> B
 class MAP():
@@ -230,8 +220,6 @@ class MAP():
         X = ATOM(('X', 'x'))
         self.E = E_seeds
         self.B = SEED(X, B_connectors)
-
-
 
 def test_section_composition():
     A = ATOM(('A','a'))
