@@ -12,6 +12,39 @@ def seeds_from_graph(G):
         connectors.append([x for x in G.neighbors(v)])
     return germs, connectors
 
+
+# (semi) Definition:  two connected sections can be linked together to form a larger connected section
+def join_sections(section1, section2, seed1, seed2):
+    if section1.is_connected() and section2.is_connected():
+        new_section = nx.compose(section1, section2)
+        new_section.add_link(seed1, seed2)
+        if new_section.is_connected():
+            return new_section
+    return None
+
+
+
+def section_quotient(section, seeds, target):
+    new_section = section.copy()
+    q_connectors = []
+    # Add the new seed
+    new_section.add_seed(target, q_connectors)
+    # Remove seeds from section in the list
+    new_section.remove_nodes_from(seeds)
+    # Collect all connectors from nodes
+    for s in seeds:
+        for neighbor in section.neighbors(s):
+            if neighbor not in q_connectors:
+                q_connectors.append(neighbor)
+    print(q_connectors)
+    # Add connectors to the projected node
+    for i in q_connectors:
+        new_section.node[i]['connectors'].append(target)
+    # Link the dangling connectors
+    new_section.connect()
+    return new_section
+
+
 class Section(nx.Graph):
     def __init__(self):
         super().__init__()
@@ -28,12 +61,17 @@ class Section(nx.Graph):
         if dst_type in self.node[src_seed]['connectors']:
             tb = True
         if ta and tb:
-            print('link can be created') 
+            #print('link can be created') 
             self.add_edge(src_seed, dst_seed)
             self.node[dst_seed]['connectors'].remove(src_seed)
             self.node[src_seed]['connectors'].remove(dst_seed)
         else:
-            print('link cannot be created')
+            #print('link cannot be created')
+            pass
+
+    def add_links_from(self, link_list):
+        for link in link_list:
+            self.add_link(link[0], link[1])
             
     def connectors(self):
         available_connectors = []
@@ -49,15 +87,13 @@ class Section(nx.Graph):
         return nx.is_connected(self)
 
 
-def join_sections(section1, section2, seed1, seed2):
-    if section1.is_connected() and section2.is_connected():
-        new_section = nx.compose(section1, section2)
-        new_section.add_link(seed1, seed2)
-        if new_section.is_connected():
-            return new_section
-    return None
+    def connect(self):
+        for c in combinations(self.nodes(), 2):
+            self.add_link(c[0], c[1])
 
-if __name__ == "__main__":
+
+
+def test_join_sections():
     sec1 = Section()
     sec1.add_seed('a',['b','c'])
     sec1.add_seed('b',['a'])
@@ -72,4 +108,21 @@ if __name__ == "__main__":
 
     sec3 = join_sections(sec2, sec1, 'c', 'a')
     sec3.connectors()
+
+
+def test_graph_quotient():
+    sec = Section()
+    sec.add_seed('a', ['b','c','d'])
+    sec.add_seed('b', ['a','e'])
+    sec.add_seed('c', ['a','e'])
+    sec.add_seed('d', ['a','e'])
+    sec.add_seed('e', ['b','c','d'])
+    sec.add_links_from([('a','b'),  ('a','c'), ('a','d'), ('e','b'), ('e','c'), ('e', 'd')])
+    quotient = section_quotient(sec, ['b','c','d'], 'x')
+    quotient.connectors()
+
+if __name__ == "__main__":
+    #test_join_sections()
+    test_graph_quotient()
+
 
