@@ -22,6 +22,19 @@ def join_sections(section1, section2, seed1, seed2):
     return None
 
 
+def section_from_text(text):
+    tokens = text.split()
+    section = Section()
+    for count, token in enumerate(tokens):
+        if count == 0:
+            section.add_seed(tokens[count], [tokens[count+1]])
+        elif count < len(tokens)-1:
+            section.add_seed(tokens[count], [tokens[count-1], tokens[count+1]])
+        else:
+            section.add_seed(tokens[count], [tokens[count-1]])
+    section.connect()
+    return section
+
 def section_quotient(section, seeds, target):
     new_section = section.copy()
     q_connectors = []
@@ -110,15 +123,39 @@ class Section(nx.Graph):
         print('Available connectors: ', available_connectors)
         print('Links: ', self.edges(data=True))
 
-
     def is_connected(self):
         return nx.is_connected(self)
-
 
     def connect(self):
         for c in combinations(self.nodes(), 2):
             self.add_link(c[0], c[1])
 
+    # Query for a seed. If exists return the germ and connectors
+    def get_seed(self, seed):
+        if self.has_node(seed):
+            germ = seed
+            connectors = [x for x in self.neighbors(seed)]
+            return germ, connectors
+        return None
+
+class Sheaf():
+    def __init__(self):
+        self.stalks = []
+        self.stalkfields = []
+        self.sections = []
+
+    def add_stalk(self, stalk):
+        self.stalks.append(stalk)
+
+    def add_stalkfield(self, stalkfield):
+        self.stalkfields.append(stalkfield)
+
+    def add_section(self, section):
+        self.sections.append(section)
+
+    def add_sections_from(self, sections):
+        for s in sections:
+            self.add_section(s)
 
 
 def test_join_sections():
@@ -163,15 +200,33 @@ def test_stalkfield():
     stalk2 = Stalk()
     stalk2.add_seed('x', ['y','z'])
     stalk2.add_seed('w', ['u','v'])
+    stalk3 = Stalk()
+    stalk3.add_seed('m', ['n', 'o'])
     stalkfield = StalkField()
     stalkfield.add_stalk(stalk1)
     stalkfield.add_stalk(stalk2)
+    stalkfield.add_stalk(stalk3)
     print(stalkfield.projection('foo'))
+
+
+def test_sheaf():
+    sheaf = Sheaf()
+    section1 = section_from_text('fly like a butterfly')
+    section2 = section_from_text('airplanes that fly with birds')
+    sheaf.add_sections_from([section1, section2])
+    print(section1.get_seed('fly'))
+    print(section2.get_seed('fly'))
+    stalk = Stalk()
+    stalk.add_seed(*section1.get_seed('fly'))
+    stalk.add_seed(*section2.get_seed('fly'))
+    sheaf.add_stalk(stalk)
+    print(stalk.projection('foo'))
 
 if __name__ == "__main__":
     #test_join_sections()
     #test_graph_quotient()
     #test_stalk()
-    test_stalkfield()
+    #test_stalkfield()
+    test_sheaf()
 
 
