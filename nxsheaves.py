@@ -2,7 +2,6 @@ import networkx as nx
 from itertools import combinations
 
 
-
 # Given a networkx graph generate all possible seeds
 def seeds_from_graph(G):
     germs = []
@@ -21,7 +20,6 @@ def join_sections(section1, section2, seed1, seed2):
         if new_section.is_connected():
             return new_section
     return None
-
 
 
 def section_quotient(section, seeds, target):
@@ -43,6 +41,36 @@ def section_quotient(section, seeds, target):
     # Link the dangling connectors
     new_section.connect()
     return new_section
+
+
+class Stalk():
+    def __init__(self):
+        self.seeds = []
+
+    def add_seed(self, seed_germ, seed_connectors):
+        self.seeds.append((seed_germ, seed_connectors))
+
+    def projection(self, seed_germ):
+        # set eliminates the need to check for duplicates
+        connectors = set()
+        for s in self.seeds:
+            for c in s[1]:
+                connectors.add(c)
+        return seed_germ, list(connectors)
+
+
+class StalkField():
+    def __init__(self):
+        self.stalks = []
+
+    def add_stalk(self, stalk):
+        self.stalks.append(stalk)
+
+    def projection(self, projection_name):
+        stalk_projections = []
+        for count, stalk in enumerate(self.stalks):
+            stalk_projections.append(stalk.projection(projection_name+str(count)))
+        return stalk_projections
 
 
 class Section(nx.Graph):
@@ -121,8 +149,29 @@ def test_graph_quotient():
     quotient = section_quotient(sec, ['b','c','d'], 'x')
     quotient.connectors()
 
+def test_stalk():
+    stalk = Stalk()
+    stalk.add_seed('a', ['b','c'])
+    stalk.add_seed('d', ['e','f','g','h'])
+    print(stalk.seeds)
+    print(stalk.projection('x'))
+
+def test_stalkfield():
+    stalk1 = Stalk()
+    stalk1.add_seed('a', ['b','c'])
+    stalk1.add_seed('d', ['e','f'])
+    stalk2 = Stalk()
+    stalk2.add_seed('x', ['y','z'])
+    stalk2.add_seed('w', ['u','v'])
+    stalkfield = StalkField()
+    stalkfield.add_stalk(stalk1)
+    stalkfield.add_stalk(stalk2)
+    print(stalkfield.projection('foo'))
+
 if __name__ == "__main__":
     #test_join_sections()
-    test_graph_quotient()
+    #test_graph_quotient()
+    #test_stalk()
+    test_stalkfield()
 
 
