@@ -22,6 +22,31 @@ def join_sections(section1, section2, seed1, seed2):
     return None
 
 
+# An open subgraph U of a graph G is defined to be a section of G. 
+# Germs are kept. Alternative would be to provide germs to trim.
+def open_subgraph(G, germs=None):
+    section = Section()
+    for v in germs:
+        section.add_seed(v, list(G.neighbors(v)))
+    section.connect()
+    print('open subgraph: %s links %s' % (section.germs(data=True), section.edges()))
+    #print(section.is_connected())
+    return section
+
+# A collection {Ui} of open subgraphs is an open cover for an open subgraph U 
+# if the union of all the Ui contain U.
+def open_cover(U, Ui):
+    section = Section()
+    sheaf = Sheaf()
+    [sheaf.add_section(x) for x in Ui]
+    for v in U.germs():
+        proj_germ, proj_connectors = sheaf.pierce(v)
+        section.add_seed(proj_germ, proj_connectors)
+    print(section.connectors())
+    section.connect()
+    print(section.connectors())
+
+
 def section_from_text(text):
     tokens = text.split()
     section = Section()
@@ -70,7 +95,6 @@ class Stalk():
         for s in self.seeds:
             for c in s[1]:
                 connectors.add(c)
-
         return self.projected_germ, list(connectors)
     
     def is_empty(self):
@@ -79,6 +103,7 @@ class Stalk():
         else:
             return False
 
+# The stalk field only has individuals seeds up and down each stalk; the stalks are not linked to one-another.
 class StalkField():
     def __init__(self):
         self.stalks = []
@@ -96,6 +121,7 @@ class StalkField():
 class Section(nx.Graph):
     def __init__(self):
         super().__init__()
+        self.germs = self.nodes
 
     def add_seed(self, seed_germ, seed_connectors):
         self.add_node(seed_germ, connectors=seed_connectors)
@@ -141,9 +167,34 @@ class Section(nx.Graph):
     def get_seed(self, seed):
         if self.has_node(seed):
             germ = seed
-            connectors = [x for x in self.neighbors(seed)]
-            return germ, connectors
+            all_connectors = set()
+            for i in self.get_neighbors(germ):
+                all_connectors.add(i)
+            for i in self.get_open_connectors(germ):
+                all_connectors.add(i)
+            return germ, list(all_connectors)
         return None, None
+
+    # Returns open connectors for germ
+    def get_open_connectors(self, germ):
+        if self.has_node(germ):
+            connectors = self.germs[germ]['connectors']
+            return connectors
+        return None
+
+    # Returns neighbors for germ
+    def get_neighbors(self, germ):
+        if self.has_node(germ):
+            connectors = [x for x in self.neighbors(germ)]
+            return connectors
+        return None
+
+    # Build a graph from the section
+    def build_graph(self):
+        G = nx.Graph()
+        G.add_nodes_from(self.nodes())
+        G.add_edges_from(self.edges())
+        return G
 
 class Sheaf():
     def __init__(self):
@@ -166,13 +217,16 @@ class Sheaf():
 
     def pierce(self, key):
         stalk = Stalk(key)
-        for s in self.sections:
+        for layer, s in enumerate(self.sections):
             germ, connectors = s.get_seed(key)
             if germ:
                 stalk.add_seed(germ, connectors)
+                # XXX: not sure where's the best place to store the layer info
+                print('Pierce found key=%s in section layer=%s' % (key, layer))
         if not stalk.is_empty():
             self.add_stalk(stalk)
-        print(stalk.projection())
+        print('Stalk of key=(%s) projection=%s' % (stalk.projection()))
+        return stalk.projection()
 
 
 
@@ -243,11 +297,45 @@ def test_sheaf():
     print(len(sheaf.sections))
     print(len(sheaf.stalks))
 
+def test_open_subgraph():
+    G = nx.Graph()
+    G.add_edges_from([('a','b'), ('a','c'), ('b','c'), ('b','d'), ('c','d')])
+    
+    section = open_subgraph(G, ['b','c'])
+    section = open_subgraph(G, ['a','d'])
+    section = open_subgraph(G, ['a','b'])
+    section = open_subgraph(G, ['a','b','c','d'])
+
+    # Claim: res_{U,U}:F(U)->F(U) is the identity of F(U)
+    section = open_subgraph(G, ['a'])
+
+    # Claim: For a sequence of open subgraphs the restrictions compose 
+    H = open_subgraph(G, ['a', 'c', 'd']).build_graph()
+    print(H.nodes(), H.edges())
+    I = open_subgraph(H, ['a', 'd']).build_graph()
+    print(I.nodes(), I.edges())
+
+
+def test_open_cover():
+    G = nx.Graph()
+    G.add_edges_from([('a','b'), ('a','c'), ('b','c'), ('b','d'), ('c','d')])
+    os_original = open_subgraph(G, ['a','b','c','d'])
+    os1 = open_subgraph(G, ['a','b'])
+    os2 = open_subgraph(G, ['b','c'])
+    print(open_cover(os_original, [os1, os2]))
+    os3 = open_subgraph(G, ['d'])
+    print(open_cover(os_original, [os1, os2, os3]))
+
+
+
+
 if __name__ == "__main__":
     #test_join_sections()
     #test_graph_quotient()
     #test_stalk()
     #test_stalkfield()
-    test_sheaf()
+    #test_sheaf()
+    #test_open_subgraph()
+    test_open_cover()
 
 
