@@ -36,15 +36,16 @@ def open_subgraph(G, germs=None):
 # A collection {Ui} of open subgraphs is an open cover for an open subgraph U 
 # if the union of all the Ui contain U.
 def open_cover(U, Ui):
-    section = Section()
+    union = Section()
     sheaf = Sheaf()
     [sheaf.add_section(x) for x in Ui]
     for v in U.germs():
         proj_germ, proj_connectors = sheaf.pierce(v)
-        section.add_seed(proj_germ, proj_connectors)
-    print(section.connectors())
-    section.connect()
-    print(section.connectors())
+        union.add_seed(proj_germ, proj_connectors)
+    #print(union.connectors())
+    union.connect()
+    #print(union.connectors())
+    return nx.is_isomorphic(U, union)
 
 
 def section_from_text(text):
