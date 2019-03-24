@@ -45,7 +45,7 @@ def open_cover(U, Ui):
     #print(union.connectors())
     union.connect()
     #print(union.connectors())
-    return nx.is_isomorphic(U, union)
+    return union, nx.is_isomorphic(U, union)
 
 
 def section_from_text(text):
@@ -86,9 +86,15 @@ class Stalk():
     def __init__(self, p_germ):
         self.seeds = []
         self.projected_germ = p_germ
+        self.seed_map = []
 
     def add_seed(self, seed_germ, seed_connectors):
         self.seeds.append((seed_germ, seed_connectors))
+
+    # Append germ and connectors to stalk's seeds, and map germ to section
+    def add_seed_map(self, seed_germ, seed_connectors, section):
+        self.seeds.append((seed_germ, seed_connectors))
+        self.seed_map.append(section)
 
     def projection(self):
         # set eliminates the need to check for duplicates
@@ -123,6 +129,9 @@ class Section(nx.Graph):
     def __init__(self):
         super().__init__()
         self.germs = self.nodes
+
+    def __str__(self):
+        return str(id(self))
 
     def add_seed(self, seed_germ, seed_connectors):
         self.add_node(seed_germ, connectors=seed_connectors)
@@ -221,12 +230,13 @@ class Sheaf():
         for layer, s in enumerate(self.sections):
             germ, connectors = s.get_seed(key)
             if germ:
-                stalk.add_seed(germ, connectors)
-                # XXX: not sure where's the best place to store the layer info
-                print('Pierce found key=%s in section layer=%s' % (key, layer))
+                #stalk.add_seed(germ, connectors)
+                stalk.add_seed_map(germ, connectors, s)
+                print('Pierce found key=%s in section layer=%s section=%s' % (key, layer, id(s)))
         if not stalk.is_empty():
             self.add_stalk(stalk)
         print('Stalk of key=(%s) projection=%s' % (stalk.projection()))
+        print('Stalk map count = %s' % (len(stalk.seed_map)))
         return stalk.projection()
 
 
@@ -326,7 +336,6 @@ def test_open_cover():
     print(open_cover(os_original, [os1, os2]))
     os3 = open_subgraph(G, ['d'])
     print(open_cover(os_original, [os1, os2, os3]))
-
 
 
 
