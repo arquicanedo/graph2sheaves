@@ -36,6 +36,7 @@ def open_subgraph(G, germs=None):
 # A collection {Ui} of open subgraphs is an open cover for an open subgraph U 
 # if the union of all the Ui contain U.
 def open_cover(U, Ui):
+    assert isinstance(Ui, list)
     union = Section()
     sheaf = Sheaf()
     [sheaf.add_section(x) for x in Ui]
@@ -46,6 +47,8 @@ def open_cover(U, Ui):
     union.connect()
     #print(union.connectors())
     return union, nx.is_isomorphic(U, union)
+
+
 
 
 def section_from_text(text):
@@ -239,6 +242,21 @@ class Sheaf():
         print('Stalk map count = %s' % (len(stalk.seed_map)))
         return stalk.projection()
 
+    def germs(self):
+        all_germs = set()
+        for s in self.sections:
+            for g in s.germs():
+                all_germs.add(g)
+        return all_germs
+
+    def pierce_all_sections(self):
+        all_germs = self.germs()
+        union = Section()
+        for v in all_germs:
+            union.add_seed(*self.pierce(v))
+        union.connect()
+        return union
+
 
 
 def test_join_sections():
@@ -336,6 +354,23 @@ def test_open_cover():
     print(open_cover(os_original, [os1, os2]))
     os3 = open_subgraph(G, ['d'])
     print(open_cover(os_original, [os1, os2, os3]))
+    print(open_cover(os_original, [os_original]))
+
+
+def test_sheaf_from_sections():
+
+    sheaf = Sheaf()
+    section1 = section_from_text('fly like a butterfly')
+    section2 = section_from_text('airplanes that fly')
+    section3 = section_from_text('fly fishing')
+    section4 = section_from_text('fly away home')
+    section5 = section_from_text('fly ash in concrete')
+    section6 = section_from_text('when sparks fly')
+    section7 = section_from_text('lets fly a kite')
+    section8 = section_from_text('learn to fly helicopters')
+    sheaf.add_sections_from([section1, section2, section3, section4, section5, section6, section7, section8])
+    sheaf_projection = sheaf.pierce_all_sections()
+    print(sheaf_projection.connectors())
 
 
 
@@ -346,6 +381,7 @@ if __name__ == "__main__":
     #test_stalkfield()
     #test_sheaf()
     #test_open_subgraph()
-    test_open_cover()
+    #test_open_cover()
+    test_sheaf_from_sections()
 
 
