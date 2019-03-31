@@ -1,2 +1,5 @@
 # nxsheaves
-NetworkX Sheaves implementation
+Sheaves implementation based on NetworkX
+
+## General
+test
