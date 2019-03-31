@@ -1,5 +1,6 @@
 import networkx as nx
 from itertools import combinations
+from graphviz import Digraph
 
 
 # Given a networkx graph generate all possible seeds
@@ -209,6 +210,15 @@ class Section(nx.Graph):
         G.add_edges_from(self.edges())
         return G
 
+    def dot(self, g, section_name):
+        # NOTE: the subgraph name needs to begin with 'cluster' (all lowercase)
+        # so that Graphviz recognizes it as a special cluster subgraph
+        with g.subgraph(name="cluster_"+section_name) as c:
+            for e in self.edges():
+                c.edge(e[0]+"_"+section_name, e[1]+"_"+section_name)
+                c.attr(label='Section_'+section_name)
+            
+
 class Sheaf():
     def __init__(self):
         self.stalks = []
@@ -256,6 +266,17 @@ class Sheaf():
             union.add_seed(*self.pierce(v))
         union.connect()
         return union
+
+    def dot(self):
+        dot = Digraph('G', filename='/tmp/sheaf.gv')
+        for count, sec in enumerate(self.sections):
+            print(type(sec))
+            sec.dot(dot, str(count))
+
+        projection = self.pierce_all_sections()
+        projection.dot(dot, str('100'))
+        dot.view()
+
 
 
 
@@ -371,7 +392,7 @@ def test_sheaf_from_sections():
     sheaf.add_sections_from([section1, section2, section3, section4, section5, section6, section7, section8])
     sheaf_projection = sheaf.pierce_all_sections()
     print(sheaf_projection.connectors())
-
+    sheaf.dot()
 
 
 if __name__ == "__main__":
@@ -383,5 +404,3 @@ if __name__ == "__main__":
     #test_open_subgraph()
     #test_open_cover()
     test_sheaf_from_sections()
-
-
