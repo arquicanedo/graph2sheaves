@@ -1,5 +1,6 @@
 import networkx as nx
 from itertools import combinations
+# http://www.graphviz.org/doc/info/attrs.html#k:style
 from graphviz import Digraph
 
 
@@ -210,14 +211,16 @@ class Section(nx.Graph):
         G.add_edges_from(self.edges())
         return G
 
-    def dot(self, g, section_name):
+    def dot(self, g, section_name, alt_name=None):
         # NOTE: the subgraph name needs to begin with 'cluster' (all lowercase)
         # so that Graphviz recognizes it as a special cluster subgraph
         with g.subgraph(name="cluster_"+section_name) as c:
             for e in self.edges():
                 c.edge(e[0]+"_"+section_name, e[1]+"_"+section_name)
-                c.attr(label='Section_'+section_name)
-            
+                if alt_name:
+                    c.attr(label=alt_name)
+                else:
+                    c.attr(label='Section_'+section_name)
 
 class Sheaf():
     def __init__(self):
@@ -269,15 +272,28 @@ class Sheaf():
 
     def dot(self):
         dot = Digraph('G', filename='/tmp/sheaf.gv')
+        # Generate sections in sheaf
         for count, sec in enumerate(self.sections):
             print(type(sec))
             sec.dot(dot, str(count))
 
+        # Generate stalks in sheaf
+        for stalk in self.stalks:
+            assert len(stalk.seed_map) == len(stalk.seeds)
+            last = None
+            for ix, seed in enumerate(stalk.seeds):
+                mysection = stalk.seed_map[ix]
+                sec_ix = self.sections.index(mysection)
+                if last:
+                    dot.edge(last, seed[0] + "_" + str(sec_ix), color='blue')
+                last = seed[0] + "_" + str(sec_ix)
+            dot.edge(last, stalk.projected_germ + "_" + str(len(self.sections)), color='#4286f4', style='dashed')
+
+        # Prepare the projection
+        projection_number = len(self.sections)
         projection = self.pierce_all_sections()
-        projection.dot(dot, str('100'))
+        projection.dot(dot, str(projection_number), alt_name='Projection')
         dot.view()
-
-
 
 
 def test_join_sections():
@@ -330,7 +346,6 @@ def test_stalkfield():
     stalkfield.add_stalk(stalk3)
     print(stalkfield.projection())
 
-
 def test_sheaf():
     sheaf = Sheaf()
     section1 = section_from_text('fly like a butterfly')
@@ -379,7 +394,6 @@ def test_open_cover():
 
 
 def test_sheaf_from_sections():
-
     sheaf = Sheaf()
     section1 = section_from_text('fly like a butterfly')
     section2 = section_from_text('airplanes that fly')
