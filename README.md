@@ -1,5 +1,5 @@
 # graph2sheaves
-Sheaves Library for Graph Abstractions based on NetworkX
+Sheaves library for graph abstractions based on NetworkX
 
 ## General
 This library, inspired by [1], provides the basic functionality to create sheaves from graphs. The goal is to explore novel algorithms for graph abstraction, summarization, compositionality, and learning.
