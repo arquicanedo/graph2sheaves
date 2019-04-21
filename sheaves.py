@@ -409,6 +409,21 @@ def test_sheaf_from_sections():
     sheaf.dot()
 
 
+def test_metro_stations():
+    # Singapore Simplified
+    # https://en.wikipedia.org/wiki/List_of_Singapore_MRT_stations#/media/File:Singapore_MRT_and_LRT_System_Map.svg
+    sheaf = Sheaf()
+    red = section_from_text('Jurong-East Bishan Newton Dhoby-Ghaut City-Hall Raffles-Place Marina-Bay')
+    green = section_from_text('Jurong-East Buona-Vista Outram-Park Raffles-Place City-Hall Bugis Paya-Lebar Tanah-Merah Expo Changi-Airport')
+    green2 = section_from_text('Tanah-Merah Tampines')
+    blue = section_from_text('Botanic-Gardens Newton Little-India Bugis Promenade Bayfront Chinatown McPherson Tampines Expo')
+    purple = section_from_text('Serangoon Little-India Dhoby-Gaut Chinatown Outram-Park HarbourFront')
+    orange = section_from_text('Marina-Bay Bayfront Promenade Paya-Lebar McPherson Serangoon Bishan Botanic-Gardens Buona-Vista HarbourFront Marina-Bay')
+    orange2 = section_from_text('Dhoby-Ghaut Promenade')
+    sheaf.add_sections_from([red, green, green2, blue, purple, orange, orange2])
+    sheaf_projection = sheaf.pierce_all_sections()
+    sheaf.dot()
+
 if __name__ == "__main__":
     #test_join_sections()
     #test_graph_quotient()
@@ -417,4 +432,5 @@ if __name__ == "__main__":
     #test_sheaf()
     #test_open_subgraph()
     #test_open_cover()
-    test_sheaf_from_sections()
+    #test_sheaf_from_sections()
+    test_metro_stations()
