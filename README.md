@@ -26,6 +26,23 @@ In this example, every sentence represents a section in a sheaf. For every germ 
 
 ![alt text](figures/sheaf_text_fly.png)
 
+## Sheaves from Singapore Metro (Simplified)
+Sections can represent metro lines where germs are the individual stations. The full Singapore MRT lines looks as follows:
+
+![SingaporeMRT](https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Singapore_MRT_and_LRT_System_Map.svg/1800px-Singapore_MRT_and_LRT_System_Map.svg.png)
+
+The simplified Singapore MRT red, green, blue, purple, and orange lines is:
+```
+red={Jurong-East, Bishan, Newton, Dhoby-Ghaut, City-Hall, Raffles-Place, Marina-Bay}
+green={Jurong-East, Buona-Vista, Outram-Park, Raffles-Place, City-Hall, Bugis, Paya-Lebar, Tanah-Merah, Expo, Changi-Airport}
+green2={Tanah-Merah, Tampines}
+blue={Botanic-Gardens, Newton, Little-India, Bugis, Promenade, Bayfront, Chinatown, McPherson, Tampines, Expo}
+purple={Serangoon, Little-India, Dhoby-Gaut, Chinatown, Outram-Park, HarbourFront}
+orange={Marina-Bay, Bayfront, Promenade, Paya-Lebar, McPherson, Serangoon, Bishan, Botanic-Gardens, Buona-Vista, HarbourFront, Marina-Bay}
+orange2={Dhoby-Ghaut, Promenade}
+```
+The resulting sheaf from the simplified Singapore MRT lines is as follows:
+![alt text](figures/sheaf_singapore_metro.png)
 
 ## References
 [1] Linas Vepstas, "Sheaves: A Topological Approach to Big Data", https://arxiv.org/abs/1901.01341, 2019.  
