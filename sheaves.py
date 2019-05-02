@@ -50,9 +50,6 @@ def open_cover(U, Ui):
     #print(union.connectors())
     return union, nx.is_isomorphic(U, union)
 
-
-
-
 def section_from_text(text):
     tokens = text.split()
     section = Section()
@@ -241,6 +238,7 @@ class Sheaf():
         for s in sections:
             self.add_section(s)
 
+    # returns tuple (germ, connectors)
     def pierce(self, key):
         stalk = Stalk(key)
         for layer, s in enumerate(self.sections):
@@ -255,6 +253,20 @@ class Sheaf():
         print('Stalk map count = %s' % (len(stalk.seed_map)))
         return stalk.projection()
 
+    # returns tuple (germ, connectors)
+    def pierce_similar(self, key, list_of_pairs):
+        stalk = Stalk(key)
+        for (germ_name, section) in list_of_pairs:
+            germ, connectors = section.get_seed(germ_name)
+            if germ:
+                stalk.add_seed_map(germ, connectors, section)
+                print('Pierce found key=%s in section section=%s' % (key, id(section)))
+        if not stalk.is_empty():
+            self.add_stalk(stalk)
+        print('Stalk of key=(%s) projection=%s' % (stalk.projection()))
+        print('Stalk map count = %s' % (len(stalk.seed_map)))
+        return stalk.projection()
+
     def germs(self):
         all_germs = set()
         for s in self.sections:
@@ -262,6 +274,7 @@ class Sheaf():
                 all_germs.add(g)
         return all_germs
 
+    # returns a section
     def pierce_all_sections(self):
         all_germs = self.germs()
         union = Section()
