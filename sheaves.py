@@ -262,12 +262,9 @@ class Sheaf():
         for layer, s in enumerate(self.sections):
             germ, connectors = s.get_seed(key)
             if germ:
-                # Remap connectors to known maps
-                print("==before=== %s == %s" % (germ ,connectors))
-                connectors = self.remap_connectors(germ, connectors)
-                print("==after=== %s == %s" % (germ ,connectors))
                 stalk.add_seed_map(germ, connectors, s)
                 print('Pierce found key=%s in section layer=%s section=%s' % (key, layer, id(s)))
+                # Add mapping of germs to projected keys
                 self.connector2projection[germ] = key
         if not stalk.is_empty():
             self.add_stalk(stalk)
@@ -283,8 +280,8 @@ class Sheaf():
             if germ:
                 stalk.add_seed_map(germ, connectors, section)
                 print('Pierce found key=%s mapped to %s in section section=%s' % (key, germ, id(section)))
+                # Add mapping of germs to projected keys
                 self.connector2projection[germ] = key
-
         if not stalk.is_empty():
             self.add_stalk(stalk)
         print('Stalk of key=(%s) projection=%s' % (stalk.projection()))
