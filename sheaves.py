@@ -212,6 +212,10 @@ class Section(nx.Graph):
         # NOTE: the subgraph name needs to begin with 'cluster' (all lowercase)
         # so that Graphviz recognizes it as a special cluster subgraph
         with g.subgraph(name="cluster_"+section_name) as c:
+            # Add nodes
+            for n in self.nodes():
+                c.node(n+"_"+section_name)
+            # Add edges
             for e in self.edges():
                 c.edge(e[0]+"_"+section_name, e[1]+"_"+section_name)
                 if alt_name:
@@ -238,13 +242,13 @@ class Sheaf():
         for s in sections:
             self.add_section(s)
 
+    # Finds all instances of key in the sheaf's sections and binds them in a stalk projecting 'key'
     # returns tuple (germ, connectors)
     def pierce(self, key):
         stalk = Stalk(key)
         for layer, s in enumerate(self.sections):
             germ, connectors = s.get_seed(key)
             if germ:
-                #stalk.add_seed(germ, connectors)
                 stalk.add_seed_map(germ, connectors, s)
                 print('Pierce found key=%s in section layer=%s section=%s' % (key, layer, id(s)))
         if not stalk.is_empty():
@@ -260,12 +264,16 @@ class Sheaf():
             germ, connectors = section.get_seed(germ_name)
             if germ:
                 stalk.add_seed_map(germ, connectors, section)
-                print('Pierce found key=%s in section section=%s' % (key, id(section)))
+                print('Pierce found key=%s mapped to %s in section section=%s' % (key, germ, id(section)))
+
         if not stalk.is_empty():
             self.add_stalk(stalk)
         print('Stalk of key=(%s) projection=%s' % (stalk.projection()))
         print('Stalk map count = %s' % (len(stalk.seed_map)))
-        return stalk.projection()
+
+        mysection = Section()
+        mysection.add_seed(*stalk.projection())
+        return mysection
 
     def germs(self):
         all_germs = set()
@@ -282,6 +290,17 @@ class Sheaf():
             union.add_seed(*self.pierce(v))
         union.connect()
         return union
+
+    # returns a section containing only the projection of the stalks in the sheaf
+    def stalks_projection(self):
+        projection = Section()
+        for stalk in self.stalks:
+            germ, connectors = stalk.projection()
+            print(germ, connectors)
+            projection.add_seed(*stalk.projection())
+        projection.connect()
+        return projection
+
 
     def dot(self):
         dot = Digraph('G', filename='/tmp/sheaf.gv')
@@ -304,7 +323,36 @@ class Sheaf():
 
         # Prepare the projection
         projection_number = len(self.sections)
-        projection = self.pierce_all_sections()
+        #projection = self.pierce_all_sections()
+        projection = self.stalks_projection()
         projection.dot(dot, str(projection_number), alt_name='Projection')
         dot.view()
 
+
+
+def test_pierce_similar():
+    sheaf = Sheaf()
+    section1 = section_from_text('the dog barks')
+    section2 = section_from_text('my cat meows')
+    section3 = section_from_text('John has a bird that chirps')
+    sheaf.add_sections_from([section1, section2, section3])
+    animal_section = sheaf.pierce_similar('animal', [('dog', section1), ('cat', section2), ('bird', section3)])
+    sound_section = sheaf.pierce_similar('sound', [('barks', section1), ('meows', section2), ('chirps', section3)])
+    sheaf.pierce('the')
+    sheaf.pierce('my')
+    sheaf.pierce('John')
+    sheaf.pierce('has')
+    sheaf.pierce('a')
+    sheaf.pierce('that')
+
+    print('animal germs')
+    print(animal_section.germs, animal_section.connectors())
+
+    print('sound germs')
+    print(sound_section.germs, sound_section.connectors())
+
+    #print(sheaf.stalks[0].seeds)
+    #print(sheaf.stalks[0].projected_germ)
+    sheaf.dot()
+    
+test_pierce_similar()
