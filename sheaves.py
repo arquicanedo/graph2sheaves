@@ -347,36 +347,3 @@ class Sheaf():
 
 
 
-def test_pierce_similar():
-    sheaf = Sheaf()
-    section1 = section_from_text('the dog barks')
-    section2 = section_from_text('my cat meows')
-    section3 = section_from_text('John has a bird that chirps')
-    sheaf.add_sections_from([section1, section2, section3])
-    animal_section = sheaf.pierce_similar('animal', [('dog', section1), ('cat', section2), ('bird', section3)])
-    sound_section = sheaf.pierce_similar('sound', [('barks', section1), ('meows', section2), ('chirps', section3)])
-    sheaf.pierce('the')
-    sheaf.pierce('my')
-    sheaf.pierce('John')
-    sheaf.pierce('has')
-    sheaf.pierce('a')
-    sheaf.pierce('that')
-
-    print('animal germs')
-    print(animal_section.germs, animal_section.connectors())
-
-    print('sound germs')
-    print(sound_section.germs, sound_section.connectors())
-
-    #print(sheaf.stalks[0].seeds)
-    #print(sheaf.stalks[0].projected_germ)
-    sheaf.dot()
-
-
-
-    print("==============")
-    print(sheaf.stalks_projection().germs, sheaf.stalks_projection().connectors())
-
-
-    
-test_pierce_similar()
