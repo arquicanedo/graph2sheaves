@@ -228,6 +228,7 @@ class Sheaf():
         self.stalks = []
         self.stalkfields = []
         self.sections = []
+        self.connector2projection = {}
 
     def add_stalk(self, stalk):
         self.stalks.append(stalk)
@@ -242,6 +243,18 @@ class Sheaf():
         for s in sections:
             self.add_section(s)
 
+
+    def remap_connectors(self, germ, connectors):
+        remapped_connectors = set()
+        for c in connectors:
+            if c in self.connector2projection:
+                remapped_connectors.add(self.connector2projection[c])
+            else:
+                self.connector2projection[c] = c
+                remapped_connectors.add(self.connector2projection[c])
+        return remapped_connectors
+
+
     # Finds all instances of key in the sheaf's sections and binds them in a stalk projecting 'key'
     # returns tuple (germ, connectors)
     def pierce(self, key):
@@ -249,8 +262,13 @@ class Sheaf():
         for layer, s in enumerate(self.sections):
             germ, connectors = s.get_seed(key)
             if germ:
+                # Remap connectors to known maps
+                print("==before=== %s == %s" % (germ ,connectors))
+                connectors = self.remap_connectors(germ, connectors)
+                print("==after=== %s == %s" % (germ ,connectors))
                 stalk.add_seed_map(germ, connectors, s)
                 print('Pierce found key=%s in section layer=%s section=%s' % (key, layer, id(s)))
+                self.connector2projection[germ] = key
         if not stalk.is_empty():
             self.add_stalk(stalk)
         print('Stalk of key=(%s) projection=%s' % (stalk.projection()))
@@ -265,6 +283,7 @@ class Sheaf():
             if germ:
                 stalk.add_seed_map(germ, connectors, section)
                 print('Pierce found key=%s mapped to %s in section section=%s' % (key, germ, id(section)))
+                self.connector2projection[germ] = key
 
         if not stalk.is_empty():
             self.add_stalk(stalk)
@@ -296,8 +315,9 @@ class Sheaf():
         projection = Section()
         for stalk in self.stalks:
             germ, connectors = stalk.projection()
+            connectors = self.remap_connectors(germ, connectors)
             print(germ, connectors)
-            projection.add_seed(*stalk.projection())
+            projection.add_seed(germ, connectors)
         projection.connect()
         return projection
 
@@ -354,5 +374,12 @@ def test_pierce_similar():
     #print(sheaf.stalks[0].seeds)
     #print(sheaf.stalks[0].projected_germ)
     sheaf.dot()
+
+
+
+    print("==============")
+    print(sheaf.stalks_projection().germs, sheaf.stalks_projection().connectors())
+
+
     
 test_pierce_similar()
